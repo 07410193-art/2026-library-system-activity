@@ -1,0 +1,17 @@
+{
+    "name": "alexlisay/2026-library-system-activity",
+    "description": "final-activity",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Alexlisay\\2026LibrarySystemActivity\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "lisayAlex",
+            "email": "202401-00307@dwc-legazpi.edu"
+        }
+    ],
+    "require": {}
+}
