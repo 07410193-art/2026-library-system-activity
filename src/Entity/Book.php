@@ -1,5 +1,7 @@
 <?php
-declare(strict_types=1);
+
+
+namespace App\Entity;
 
 class Book{
     private ?int $bookId;
@@ -20,6 +22,31 @@ class Book{
         $this->year = $year;
         $this->genre = $genre;
         $this->bookId = $bookId;
+    }
+
+    public function getBookId(): ?int
+    {
+        return $this->bookId;
+    }
+
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+
+    public function getAuthor(): string
+    {
+        return $this->author;
+    }
+
+    public function getYear(): int 
+    {
+        return $this->year;
+    }
+
+    public function getGenre(): string
+    {
+        return $this->genre;
     }
 }
 

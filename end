@@ -1,0 +1,19 @@
+[33mcommit 338a9bb01ce43238e6f5f8b80ff74d7a2e0c6ce7[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mrefactor/oop-standards[m[33m)[m
+Author: lisayAlex <202401-00307@dwc-legazpi.edu>
+Date:   Tue May 5 20:27:32 2026 +0800
+
+    move legacy system into Public folder
+
+[33mcommit 60e277cce5e83b43d9ed87cba366121264b5b7db[m
+Author: lisayAlex <202401-00307@dwc-legazpi.edu>
+Date:   Tue May 5 20:24:14 2026 +0800
+
+    remove manually moved legacy file from Public
+
+[33mcommit 3f614a5e3f59a849f0a440a7ec077b2c9095ed9a[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m, [m[1;32mfeature/documentation[m[33m)[m
+Author: dwcl-sirlana <lana.christian@dwc-legazpi.edu>
+Date:   Mon May 4 09:09:21 2026 +0800
+
+    Implement basic library system functionality
+    
+    This is the file that students will refactor
