@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 use App\Config\DatabaseConfig;
+use App\Config\LibraryConfig;
+use App\Service\LibraryService;
 
 class BorrowRepository{
     private $connection;
@@ -25,7 +27,7 @@ class BorrowRepository{
         return (int) $this->connection->lastInsertId();
     }
 
-    public function returnBook(int $recordId){
+    public function returnBook(int $recordId): ?float{
         try{
             $this->connection->beginTransaction();
             
@@ -36,11 +38,22 @@ class BorrowRepository{
             ]);
 
             $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-            $dueDate = strtotime($result['dueDate']);
-            $today = strtotime(date('Y-m-d'));
-            $different = (($today - $dueDate));
+            $fine = LibraryService::calculateOverduefine(
+                        new DateTime($result['dueDate']), 
+                        LibraryConfig::DAILY_FINE_RATE);
 
+            $sql2 = "UPDATE borrow_records SET return_date = :returned_date, fine_amount = :fine_amount, status = :status WHERE record_id = :record_id";
+            $sql2 = $this->connection->prepare($sql2);
+            $sql2->execute([
+                'returned_date' => date('Y-m-d'),
+                'fine_amount' => $fine,
+                'status' => LibraryConfig::STATUS_RETURNED,
+                'record_id' => $recordId
+            ]);
 
+            $this->connection->commit();
+
+            return $fine;
 
         }catch(\PDOException $error){
             throw new RuntimeException("Returned Book Failed: " . $error->getMessage());

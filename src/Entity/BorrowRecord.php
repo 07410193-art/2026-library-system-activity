@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 namespace App\Entity;
+use App\Config\LibraryConfig;
 
 use DateTime;
 
@@ -20,7 +21,7 @@ class BorrowRecord{
         int $bookId,
         DateTime $borrowDate,
         DateTime $dueDate,
-        string $status = 'borrowed',
+        string $status = LibraryConfig::STATUS_BORROWED,
         float $fineAmount = 0.0
     )
     {
