@@ -1,5 +1,5 @@
 <?php
-
+declare(strict_types=1);
 use App\Config\DatabaseConfig;
 
 class BorrowRepository{
@@ -23,6 +23,28 @@ class BorrowRepository{
         ]);
 
         return (int) $this->connection->lastInsertId();
+    }
+
+    public function returnBook(int $recordId){
+        try{
+            $this->connection->beginTransaction();
+            
+            $sql = "SELECT * FROM borrowRecords WHERE recordId = :recordId";
+            $stmt = $this->connection->prepare($sql);
+            $stmt->execute([
+                'recordId' => $recordId
+            ]);
+
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $dueDate = strtotime($result['dueDate']);
+            $today = strtotime(date('Y-m-d'));
+            $different = (($today - $dueDate));
+
+
+
+        }catch(\PDOException $error){
+            throw new RuntimeException("Returned Book Failed: " . $error->getMessage());
+        }
     }
 }
 

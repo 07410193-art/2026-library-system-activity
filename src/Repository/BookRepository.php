@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 use App\Config\DatabaseConfig;
 
@@ -32,6 +33,8 @@ class BookRepository{
 
         return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
+
+
 }
 
 ?>
