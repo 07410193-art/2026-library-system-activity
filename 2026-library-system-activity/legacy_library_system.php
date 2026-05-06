@@ -1,0 +1,131 @@
+<?php
+
+declare(strict_types=1);
+namespace LibraryLegacy;
+
+class LibraryLegacy
+
+{
+    private $db_host = "localhost";
+    private $db_user = "root";
+    private $db_password = "";
+    private $db_name = "library_db";
+    private $conn;
+    private $fine_rate = 5;
+
+    public function connect() {
+        try {
+         $this->conn = new \mysqli($this->db_host, $this->db_user, $this->db_password, $this->db_name);
+        if ($this->conn->connect_error) {
+            throw new \RuntimeException(
+                'Database connection failed: ' . $this->conn->connect_error
+            );
+        }
+        } catch (\Exception $e) {
+            die("Connection failed: " . $e->getMessage());
+        }
+    }
+    public function addBook(string $title, string $author, int $year, string $genre)
+    {
+        $sql = "INSERT INTO books(title,author,year,genre) VALUES(?,?,?,?)";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("ssis", $title, $author, $year, $genre);
+        $stmt->execute();
+        return $this->conn->insert_id;
+    }
+    public function getBook(int $id)
+    {
+        $sql = "SELECT * FROM books WHERE book_id=?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
+    }
+    public function borrowBook(int $student_id, int $book_id, int $days)
+    {
+        $due = date('Y-m-d', strtotime('+' . $days . ' days'));
+        $sql = "INSERT INTO borrow_records(student_id,book_id,borrow_date,due_date,status) VALUES(?,?,?,?,'borrowed')";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("iiss", $student_id , $book_id, date('Y-m-d'), $due);
+        $stmt->execute();
+        return true;
+    }
+    public function returnBook(int $return_id)
+    {
+        $sql = "SELECT * FROM borrow_records WHERE record_id=?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $return_id);
+        $stmt->execute();
+        $r = $stmt->get_result()->fetch_assoc();
+        $due = strtotime($r['due_date']);
+        $today = strtotime(date('Y-m-d'));
+        $secondsperday = 60 * 60 * 24;
+        $diff = ($today - $due) / $secondsperday;
+        $fine = 0;
+        if ($diff > 0) {
+            $fine = $diff * $this->fine_rate;
+        }
+        $sql2 = "UPDATE borrow_records SET return_date='" . date('Y-m-d') . "', fine_amount=?, status='returned' WHERE record_id=?";
+        $stmt2 = $this->conn->prepare($sql2);
+        $stmt2->bind_param("di", $fine, $return_id);
+        $stmt2->execute();
+        return $fine;
+    }
+    public function listBooks()
+    {
+        $sql = "SELECT * FROM books";
+        $result = $this->conn->query($sql);
+        echo "<table border='1'><tr><th>ID</th><th>Title</th><th>Author</th><th>Year</th><th>Genre</th></tr>";
+        while ($row = $result->fetch_assoc()) {
+            echo "<tr><td>" . $row['book_id'] . "</td><td>" . $row['title'] . "</td><td>" . $row['author'] . "</td><td>" . $row['year'] . "</td><td>" . $row['genre'] . "</td></tr>";
+        }
+        echo "</table>";
+    }
+    public function searchBooks(string $keyword)
+    {
+        $sql = "SELECT * FROM books WHERE title LIKE    '%" . $keyword . "%' OR author LIKE '%" . $keyword . "%'";
+        $result = $this->conn->query($sql);
+        $books = array();
+
+        while ($row = $result->fetch_assoc()) {
+            $books[] = $row;
+        }
+        return $books;
+    }
+    public function getOverdueBooks()
+    {
+        $sql = "SELECT br.*, books.title, students.name FROM borrow_records br JOIN books ON borrowed.book_id=books.book_id JOIN students ON borrowed.student_id=students.student_id WHERE borrowed.due_date<'" . date('Y-m-d') . "' AND br.status='borrowed'";
+        $result = $this->conn->query($sql);
+        $list = array();
+
+        while ($row = $result->fetch_assoc()) {
+            $list[] = $row;
+        }
+        return $list;
+    }
+    public function generateReport()
+    {
+        $totalBooks = $this->conn->query("SELECT COUNT(*) as c FROM books")->fetch_assoc()['c'];
+        $totalBorrowed = $this->conn->query("SELECT COUNT(*) as c FROM borrow_records WHERE status='borrowed'")->fetch_assoc()['c'];
+        $totalReturned = $this->conn->query("SELECT COUNT(*) as c FROM borrow_records WHERE status='returned'")->fetch_assoc()['c'];
+        $totalFines = $this->conn->query("SELECT SUM(fine_amount) as s FROM borrow_records WHERE fine_amount>0")->fetch_assoc()['s'];
+        
+        echo "<h1>Library Report</h1>";
+        echo "<p>Total Books: " . $totalBooks . "</p>";
+        echo "<p>Total Borrowed: " . $totalBorrowed . "</p>";
+        echo "<p>Total Returned: " . $totalReturned . "</p>";
+        echo "<p>Total Fines Collected: $" . $totalFines . "</p>";
+        
+    }
+}
+$lib = new LibraryLegacy();
+$lib->connect();
+if (isset($_GET['act'])) {
+    if ($_GET['act'] == 'add') {
+        $lib->addBook($_POST['title'], $_POST['author'], $_POST['year'], $_POST['genre']);
+    } elseif ($_GET['act'] == 'list') {
+        $lib->listBooks();
+    } elseif ($_GET['act'] == 'report') {
+        $lib->generateReport();
+    }
+}
